@@ -1,0 +1,13 @@
+{
+    "build": { "dockerfile": "Dockerfile" },
+  
+    "customizations": {
+      "vscode": {
+        "extensions": ["dbaeumer.vscode-eslint",
+                      "ms-toolsai.jupyter",
+                      "ms-python.black-formatter"
+                    ]
+      }
+    },
+    "forwardPorts": [3000]
+}

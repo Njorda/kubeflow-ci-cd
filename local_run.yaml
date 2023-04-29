@@ -1,0 +1,111 @@
+# PIPELINE DEFINITION
+# Name: ltv-train
+components:
+  comp-ingetst-data:
+    executorLabel: exec-ingetst-data
+    inputDefinitions:
+      parameters:
+        input:
+          parameterType: NUMBER_DOUBLE
+    outputDefinitions:
+      parameters:
+        Output:
+          parameterType: NUMBER_DOUBLE
+  comp-train-model:
+    executorLabel: exec-train-model
+    inputDefinitions:
+      parameters:
+        input:
+          parameterType: NUMBER_DOUBLE
+    outputDefinitions:
+      parameters:
+        Output:
+          parameterType: NUMBER_DOUBLE
+deploymentSpec:
+  executors:
+    exec-ingetst-data:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - ingetst_data
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet     --no-warn-script-location 'kfp==2.0.0-beta.13'\
+          \ && \"$0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          python3 -m kfp.components.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef ingetst_data(input: float) -> float:\n    return 2.0\n\n"
+        image: python:3.7
+    exec-train-model:
+      container:
+        args:
+        - --executor_input
+        - '{{$}}'
+        - --function_to_execute
+        - train_model
+        command:
+        - sh
+        - -c
+        - "\nif ! [ -x \"$(command -v pip)\" ]; then\n    python3 -m ensurepip ||\
+          \ python3 -m ensurepip --user || apt-get install python3-pip\nfi\n\nPIP_DISABLE_PIP_VERSION_CHECK=1\
+          \ python3 -m pip install --quiet     --no-warn-script-location 'kfp==2.0.0-beta.13'\
+          \ && \"$0\" \"$@\"\n"
+        - sh
+        - -ec
+        - 'program_path=$(mktemp -d)
+
+          printf "%s" "$0" > "$program_path/ephemeral_component.py"
+
+          python3 -m kfp.components.executor_main                         --component_module_path                         "$program_path/ephemeral_component.py"                         "$@"
+
+          '
+        - "\nimport kfp\nfrom kfp import dsl\nfrom kfp.dsl import *\nfrom typing import\
+          \ *\n\ndef train_model(input: float) -> float:\n    return 2.0 + input\n\
+          \n"
+        image: python:3.7
+pipelineInfo:
+  name: ltv-train
+root:
+  dag:
+    tasks:
+      ingetst-data:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-ingetst-data
+        inputs:
+          parameters:
+            input:
+              runtimeValue:
+                constant: 3.0
+        taskInfo:
+          name: ingetst-data
+      train-model:
+        cachingOptions: {}
+        componentRef:
+          name: comp-train-model
+        dependentTasks:
+        - ingetst-data
+        inputs:
+          parameters:
+            input:
+              taskOutputParameter:
+                outputParameterKey: Output
+                producerTask: ingetst-data
+        taskInfo:
+          name: train-model
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.0.0-beta.13
