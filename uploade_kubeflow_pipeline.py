@@ -10,10 +10,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Retrieve required environment variables
-bucket = os.getenv("bucket")
-gcp_project = os.getenv("gcp_project")
-gcp_service_account = os.getenv("gcp_service_account")
-kubeflow_pipelines_artifact_registyr = os.getenv('kubeflow_pipelines_artifact_registyr')
+gcp_project = os.getenv("gcp_project","johan-kubeflow")
+kubeflow_pipelines_artifact_registyr = os.getenv('kubeflow_pipelines_artifact_registyr',"test-test")
+
+
 
 # Create a RegistryClient instance and connect to the Kubeflow Pipelines Artifact Registry
 client = RegistryClient(host=f"https://europe-west1-kfp.pkg.dev/{gcp_project}/{kubeflow_pipelines_artifact_registyr}")
@@ -29,3 +29,4 @@ templateName, versionName = client.upload_pipeline(
     # Add a description to the pipeline using extra_headers
     extra_headers={"description": "This is an example pipeline template."}
 )
+

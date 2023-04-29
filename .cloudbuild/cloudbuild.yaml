@@ -1,0 +1,11 @@
+steps:
+  - name: docker.io/library/python:3.11.1
+    id: build_pipeline
+    waitFor: ["-"]
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |-
+        pip install -r .devcontainer/requirements.txt
+        python kubeflow_pipeline.py
+        python uploade_kubeflow_pipeline.py
